@@ -1,0 +1,17 @@
+# Namespace para a aplicação (frontend e backend)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app
+  labels:
+    name: app
+    environment: production
+---
+# Namespace para o banco de dados
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: database
+  labels:
+    name: database
+    environment: production

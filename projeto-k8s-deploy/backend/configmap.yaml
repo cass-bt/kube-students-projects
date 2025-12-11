@@ -1,0 +1,15 @@
+# ConfigMap com variáveis de configuração do Backend Flask
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: app
+  labels:
+    app: backend
+data:
+  DB_HOST: "postgres.database.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "messagesdb"
+  # Configurações da API Flask
+  API_HOST: "0.0.0.0"
+  API_PORT: "5000"
