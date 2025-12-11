@@ -3,18 +3,18 @@
 ## 👥 Integrantes da Equipe
 | Nome | Matrícula |
 |------|-----------|
-| Nome do Aluno 1 | 000000 |
-| Nome do Aluno 2 | 000000 |
-| Nome do Aluno 3 | 000000 |
+| Lucas Gabriel ALves de Sousa | 20222380025 |
+| Cássio Bastos Alves | 20211380020 |
 
-## 🎯 Objetivo do Projeto
+
+##  Objetivo do Projeto
 Realizar o deploy completo de uma aplicação fullstack (React + Flask + PostgreSQL) em um cluster Kubernetes local (Kind), garantindo:
 - Alta disponibilidade com réplicas para frontend e backend
 - Persistência de dados utilizando PersistentVolumeClaim
 - Configuração via ConfigMap e Secrets
 - Acesso externo via NGINX Ingress Controller
 
-## 🏗️ Arquitetura da Aplicação
+##  Arquitetura da Aplicação
 
 ```
                     ┌─────────────────────────────────────────────────────┐
@@ -50,7 +50,7 @@ Realizar o deploy completo de uma aplicação fullstack (React + Flask + Postgre
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 📁 Estrutura do Projeto
+##  Estrutura do Projeto
 
 ```
 projeto-k8s-deploy/
@@ -74,46 +74,10 @@ projeto-k8s-deploy/
 1. **Docker** instalado e funcionando
 2. **Kind** (Kubernetes in Docker) instalado
 3. **kubectl** configurado
-4. **Imagens Docker** publicadas no DockerHub
+4. **Imagens Docker** publicadas no DockerHub ( já utilizadas )
 
-### Criar cluster Kind com Ingress
 
-```bash
-# Criar arquivo de configuração do Kind
-cat <<EOF | kind create cluster --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  kubeadmConfigPatches:
-  - |
-    kind: InitConfiguration
-    nodeRegistration:
-      kubeletExtraArgs:
-        node-labels: "ingress-ready=true"
-  extraPortMappings:
-  - containerPort: 80
-    hostPort: 80
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 443
-    protocol: TCP
-EOF
-```
-
-### Instalar NGINX Ingress Controller
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-
-# Aguardar o Ingress Controller estar pronto
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-```
-
-## 📦 Deploy da Aplicação
+##  Deploy da Aplicação
 
 ### Passo 1: Criar os Namespaces
 
@@ -167,7 +131,7 @@ kubectl apply -f frontend/
 kubectl apply -f ingress/
 ```
 
-## ✅ Verificação do Deploy
+##  Verificação do Deploy
 
 ### Verificar Namespaces
 
@@ -221,31 +185,29 @@ kubectl logs -l app=frontend -n app
 kubectl logs -l app=postgres -n database
 ```
 
-## 🌐 Acesso à Aplicação
+##  Acesso à Aplicação
 
 Após o deploy, a aplicação estará disponível em:
 
 | Componente | URL |
 |------------|-----|
 | Frontend | http://localhost/ |
-| Backend API | http://localhost/api/ |
+| Backend API | http://localhost/api/mensagens |
 
 ### Testar Backend via curl
 
 ```bash
-# Health check
-curl http://localhost/api/health
 
 # Listar mensagens
-curl http://localhost/api/messages
+curl http://localhost/api/mensagens
 
 # Criar mensagem
-curl -X POST http://localhost/api/messages \
+curl -X POST http://localhost/api/mensagens \
   -H "Content-Type: application/json" \
-  -d '{"content": "Hello Kubernetes!"}'
+  -d '{"content": "Nova Mensagem!"}'
 ```
 
-## 🔧 Comandos Úteis
+
 
 ### Port-Forward para Debug
 
@@ -274,7 +236,7 @@ kubectl rollout restart deployment/frontend -n app
 kubectl rollout restart deployment/backend -n app
 ```
 
-## 🗑️ Limpeza
+##  Limpeza
 
 ```bash
 # Remover todos os recursos
@@ -288,27 +250,12 @@ kubectl delete -f namespace.yaml
 kubectl delete namespace app database
 ```
 
-## 📝 Observações Importantes
 
-1. **Imagens Docker**: Antes do deploy, substitua `<SEU_DOCKERHUB_USER>` nos arquivos de deployment pela sua conta do DockerHub.
+1. **Persistência**: Os dados do PostgreSQL são persistidos no PVC. Mesmo reiniciando o cluster, os dados são mantidos.
 
-2. **Credenciais**: Os valores no Secret estão em base64. Para gerar novos valores:
-   ```bash
-   echo -n 'seu_valor' | base64
-   ```
 
-3. **Persistência**: Os dados do PostgreSQL são persistidos no PVC. Mesmo reiniciando o cluster, os dados são mantidos.
 
-4. **Probes**: Os deployments incluem `livenessProbe` e `readinessProbe` para garantir a saúde dos containers.
-
-## 🏆 Recursos Bonus Implementados
-
-- ✅ Liveness e Readiness Probes em todos os componentes
-- ✅ Resource limits e requests
-- ✅ Labels organizacionais
-- ✅ Namespaces separados para isolamento
-
-## 📚 Referências
+##  Referências
 
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Kind - Kubernetes in Docker](https://kind.sigs.k8s.io/)
