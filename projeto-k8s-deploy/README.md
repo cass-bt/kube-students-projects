@@ -16,39 +16,17 @@ Realizar o deploy completo de uma aplicação fullstack (React + Flask + Postgre
 
 ##  Arquitetura da Aplicação
 
-```
-                    ┌─────────────────────────────────────────────────────┐
-                    │                   INGRESS NGINX                      │
-                    │         http://localhost ou domínio                  │
-                    └──────────────┬────────────────┬─────────────────────┘
-                                   │                │
-                          /        │                │  /api
-                                   ▼                ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                         NAMESPACE: app                                    │
-│  ┌─────────────────────────┐      ┌─────────────────────────┐            │
-│  │   Frontend (React)      │      │   Backend (Flask)       │            │
-│  │   Deployment: 2 réplicas│      │   Deployment: 2 réplicas│            │
-│  │   Service: ClusterIP    │      │   Service: ClusterIP    │            │
-│  │   Port: 80              │      │   Port: 5000            │            │
-│  └─────────────────────────┘      └────────────┬────────────┘            │
-│                                                 │                         │
-│         ConfigMap: frontend-config              │  ConfigMap: backend-config
-│                                                 │  Secret: db-credentials │
-└─────────────────────────────────────────────────┼─────────────────────────┘
-                                                  │
-                                                  ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│                         NAMESPACE: database                               │
-│  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │                     PostgreSQL                                       │ │
-│  │                     StatefulSet: 1 réplica                          │ │
-│  │                     Service: ClusterIP (port 5432)                  │ │
-│  │                     PVC: 1Gi                                        │ │
-│  │                     Secret: postgres-secret                         │ │
-│  └─────────────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────────────┘
-```
+A aplicação segue uma arquitetura de três camadas (frontend, backend e banco de dados) implantada em Kubernetes com isolamento por namespaces.
+Camada de Apresentação (Frontend)
+O frontend é uma aplicação React que roda em um Deployment com 2 réplicas para alta disponibilidade. Ele é exposto internamente via Service do tipo ClusterIP na porta 80 e recebe a URL da API através de um ConfigMap. O usuário acessa pela rota / do Ingress.
+Camada de Aplicação (Backend)
+O backend é uma API REST em Flask que também roda em um Deployment com 2 réplicas. Ele se comunica com o banco de dados usando variáveis de ambiente vindas de ConfigMap (host, porta, nome do banco) e Secrets (usuário e senha). É exposto internamente na porta 5000 e acessível externamente pela rota /api do Ingress.
+Camada de Dados (Banco de Dados)
+O PostgreSQL utiliza um StatefulSet, que é o tipo adequado para aplicações que precisam de identidade de rede estável e armazenamento persistente. Os dados são armazenados em um PersistentVolumeClaim de 1Gi, garantindo que não sejam perdidos em caso de reinicialização. As credenciais ficam em um Secret separado.
+Comunicação Externa
+O NGINX Ingress Controller atua como ponto de entrada único, roteando as requisições: a rota / direciona para o frontend e /api para o backend. Isso permite acesso externo através de um único endereço.
+Isolamento
+A aplicação (frontend e backend) fica no namespace app, enquanto o banco de dados fica no namespace database. Essa separação permite aplicar políticas de segurança e gerenciamento de recursos de forma independente.
 
 ##  Estrutura do Projeto
 
